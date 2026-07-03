@@ -5,6 +5,7 @@
   desc: [Vibe Coding 记录],
   date: "2026-06-10",
   tags: (),
+  toc: true,
 )
 
 记录一下尝试奴役 agent 干活的过程, 以及踩坑经验

@@ -118,7 +118,7 @@
   above: 0pt,
   below: 1.2em,
 )[
-  #set text(size: 8pt)
+  #set text(size: 6.5pt)
   #show outline.entry: it => tree-toc-entry(it, depth: depth)
 
   #outline(
