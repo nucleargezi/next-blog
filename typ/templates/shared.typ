@@ -44,24 +44,82 @@
   ]
 }
 
-#let toc-entry-block(it) = link(
-  it.element.location(),
-  block(
-    width: 100%,
-    // above: 0.18em,
-    // below: 0.18em,
-    inset: (left: calc.max(0pt, (it.level - 1) * 8pt)),
-  )[
-    #it.element.body
-  ],
-)
+#let heading-index(headings, loc) = {
+  let found = none
+  for i in range(0, headings.len()) {
+    if headings.at(i).location() == loc {
+      found = i
+    }
+  }
+  found
+}
+
+#let has-next-sibling(headings, idx, level) = {
+  let has = false
+  let done = false
+  for i in range(idx + 1, headings.len()) {
+    if not done {
+      let next-level = headings.at(i).level
+      if next-level < level {
+        done = true
+      } else if next-level == level {
+        has = true
+        done = true
+      }
+    }
+  }
+  has
+}
+
+#let ancestor-index(headings, idx, level) = {
+  let found = none
+  for offset in range(0, idx) {
+    let i = idx - offset - 1
+    if found == none and headings.at(i).level == level {
+      found = i
+    }
+  }
+  found
+}
+
+#let tree-prefix(headings, idx) = {
+  let level = headings.at(idx).level
+  let prefix = ""
+  if level > 1 {
+    for parent-level in range(1, level) {
+      let parent-idx = ancestor-index(headings, idx, parent-level)
+      if parent-idx != none and has-next-sibling(headings, parent-idx, parent-level) {
+        prefix = prefix + "│  "
+      } else {
+        prefix = prefix + "   "
+      }
+    }
+  }
+
+  let branch = if has-next-sibling(headings, idx, level) { "├" } else { "└" }
+  if level == 1 {
+    prefix + branch + "─►"
+  } else {
+    prefix + branch + "──"
+  }
+}
+
+#let tree-toc-entry(it, depth: 3) = context {
+  let headings = query(heading.where(outlined: true)).filter(it => it.level <= depth)
+  let idx = heading-index(headings, it.element.location())
+  let prefix = if idx == none { "" } else { tree-prefix(headings, idx) }
+  link(it.element.location(), block(width: 100%, below: 0.1em)[
+    #text(font: code-fonts)[#prefix] #it.element.body
+  ])
+}
 
 #let toc-block(title: [Contents], depth: 3) = block(
   width: 100%,
   above: 0pt,
   below: 1.2em,
 )[
-  #show outline.entry: toc-entry-block
+  #set text(size: 8pt)
+  #show outline.entry: it => tree-toc-entry(it, depth: depth)
 
   #outline(
     title: block(below: 0.6em)[
